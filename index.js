@@ -12,6 +12,7 @@ app.use(express.json());
 app.get("/api/users/", getAllUsers);
 app.post("/api/users/", createNewUser);
 app.get("/api/users/:id", getSingleUser);
+app.delete("/api/users/:id", deleteUser);
 app.get("*", handleDefaultRequest);
 
 function createNewUser(req, res) {
@@ -50,6 +51,18 @@ function getAllUsers(req, res) {
       res.status(200).json(data);
     })
     .catch(err => conosle.log(err));
+}
+
+function deleteUser ( req, res ) {
+   const { id } = req.params;
+   db.findById(id)
+   .then(deletedUser => {
+    db.remove(id)
+    .then(x => {
+        res.status(201).json({message: 'Deleted User', data: deletedUser})
+    })
+    .catch(err => console.log(err))
+   })
 }
 
 function handleDefaultRequest(req, res) {
