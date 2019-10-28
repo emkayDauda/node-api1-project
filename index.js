@@ -20,13 +20,20 @@ function createNewUser(req, res) {
   if (req.body.name && req.body.bio) {
     db.insert(req.body)
       .then(x => {
+        console.log(x);
         db.find()
           .then(data =>
             res.status(200).json({ message: "Created new user", data: data })
           )
           .catch(err => console.log(err));
       })
-      .catch(err => console.log(err));
+      .catch(err =>
+        res
+          .status(500)
+          .json({
+            error: "There was an error while saving the user to the database"
+          })
+      );
   } else {
     res.status(400).json({
       errorMessage: "Please provide name and bio for the new user."
@@ -39,7 +46,10 @@ function getSingleUser(req, res) {
     .then(data => {
       if (data) {
         res.status(200).json(data);
-      } else res.status(201).json({ message: "No users by that ID" });
+      } else
+        res
+          .status(404)
+          .json({ message: "The user with the specified ID does not exist." });
     })
     .catch(err => res.status(404).json({ message: "user not found" }));
 }
@@ -60,10 +70,8 @@ function deleteUser(req, res) {
       .then(x => {
         if (x == "1") {
           res.status(201).json({ message: "Deleted User", data: deletedUser });
-        }
-        else {
-        res.status(201).json({ message: "No user exists with that id"});
-
+        } else {
+          res.status(404).json({ message: "No user exists with that id" });
         }
       })
       .catch(err => console.log(err));
@@ -72,12 +80,25 @@ function deleteUser(req, res) {
 
 function updateUser(req, res) {
   const { id } = req.params;
-  const { body, bio } = req.body;
+  const { name, bio } = req.body;
 
-  if (bio && body) {
+  if (bio && name) {
     db.update(id, req.body)
-      .then(data => res.status(200).json(data))
-      .catch(err => res.status(401).json(err));
+      .then(data => {
+        if (data == "1") res.status(200).json(data);
+        else {
+          res
+            .status(404)
+            .json({
+              message: "The user with the specified ID does not exist."
+            });
+        }
+      })
+      .catch(err =>
+        res
+          .status(404)
+          .json({ error: "The user information could not be modified." })
+      );
   } else {
     res
       .status(400)
