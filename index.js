@@ -9,7 +9,17 @@ const app = express()
 // app.use(cors())
 app.use(express.json())
 
+app.get('/api/users/', getAllUsers)
 app.get('*', handleDefaultRequest)
+
+function getAllUsers (req, res) {
+    db.find()
+    .then(data => {
+        console.log(data)
+        res.status(200).json(data)
+    })
+    .catch(err => conosle.log(err))
+}
 
 
 
