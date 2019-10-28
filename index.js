@@ -13,35 +13,35 @@ app.get("/api/users/", getAllUsers);
 app.post("/api/users/", createNewUser);
 app.get("/api/users/:id", getSingleUser);
 app.delete("/api/users/:id", deleteUser);
+app.put("/api/users/:id", updateUser);
 app.get("*", handleDefaultRequest);
 
 function createNewUser(req, res) {
   if (req.body.name && req.body.bio) {
-        db.insert(req.body)
-          .then(x => {
-            db.find()
-              .then(data =>
-                res
-                  .status(200)
-                  .json({ message: "Created new user", data: data })
-              )
-              .catch(err => console.log(err));
-          })
+    db.insert(req.body)
+      .then(x => {
+        db.find()
+          .then(data =>
+            res.status(200).json({ message: "Created new user", data: data })
+          )
           .catch(err => console.log(err));
-      }
-    else {
-        res
-        .status(400)
-        .json({
-          errorMessage: "Please provide name and bio for the new user."
-        });
-    }
+      })
+      .catch(err => console.log(err));
+  } else {
+    res.status(400).json({
+      errorMessage: "Please provide name and bio for the new user."
+    });
+  }
 }
 
 function getSingleUser(req, res) {
   db.findById(req.params.id)
-    .then(data => res.status(200).json(data))
-    .catch(err => console.log(err));
+    .then(data => {
+      if (data) {
+        res.status(200).json(data);
+      } else res.status(201).json({ message: "No users by that ID" });
+    })
+    .catch(err => res.status(404).json({ message: "user not found" }));
 }
 
 function getAllUsers(req, res) {
@@ -53,16 +53,36 @@ function getAllUsers(req, res) {
     .catch(err => conosle.log(err));
 }
 
-function deleteUser ( req, res ) {
-   const { id } = req.params;
-   db.findById(id)
-   .then(deletedUser => {
+function deleteUser(req, res) {
+  const { id } = req.params;
+  db.findById(id).then(deletedUser => {
     db.remove(id)
-    .then(x => {
-        res.status(201).json({message: 'Deleted User', data: deletedUser})
-    })
-    .catch(err => console.log(err))
-   })
+      .then(x => {
+        if (x == "1") {
+          res.status(201).json({ message: "Deleted User", data: deletedUser });
+        }
+        else {
+        res.status(201).json({ message: "No user exists with that id"});
+
+        }
+      })
+      .catch(err => console.log(err));
+  });
+}
+
+function updateUser(req, res) {
+  const { id } = req.params;
+  const { body, bio } = req.body;
+
+  if (bio && body) {
+    db.update(id, req.body)
+      .then(data => res.status(200).json(data))
+      .catch(err => res.status(401).json(err));
+  } else {
+    res
+      .status(400)
+      .json({ errorMessage: "Please provide name and bio for the user." });
+  }
 }
 
 function handleDefaultRequest(req, res) {
